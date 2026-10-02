@@ -1,0 +1,4 @@
+# Google Cloud SDK "installed app" OAuth client, public by design (also shipped in
+# googlecolab/google-colab-cli, Apache-2.0). Google does not treat installed-app
+# client secrets as confidential: https://developers.google.com/identity/protocols/oauth2/native-app
+backend/src/colabconnect/oauth_client.json:generic-api-key:8

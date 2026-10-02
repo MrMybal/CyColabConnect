@@ -1,0 +1,43 @@
+[project]
+name = "colabconnect"
+version = "0.1.0"
+description = "Create, configure and run Google Colab notebooks from a local web UI, with a built-in MCP server"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "CyberAlien", email = "cyberalien78@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "fastmcp>=4.0.10",
+    "google-auth>=2.59.0",
+    "google-auth-oauthlib>=1.4.1",
+    "httpx>=0.28.1",
+    "nbformat>=5.11.1",
+    "pydantic>=2.13.5",
+    "python-multipart>=0.0.32",
+    "uvicorn[standard]>=0.54.0",
+    "websockets>=17.1",
+]
+
+[project.scripts]
+colabconnect = "colabconnect:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "jupyter-server>=2.21.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+

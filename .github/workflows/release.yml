@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version matches tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(grep -Po '__version__ = "\K[^"]+' backend/src/colabconnect/__init__.py)
+          PYP=$(grep -Po '^version = "\K[^"]+' backend/pyproject.toml)
+          echo "tag=$TAG package=$PKG pyproject=$PYP"
+          test "$TAG" = "$PKG" && test "$TAG" = "$PYP"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm ci && npm run build
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Backend tests
+        working-directory: backend
+        run: uv run pytest -q
+
+      - name: Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NAME="CyColabConnect-$VERSION"
+          mkdir -p "dist/$NAME/backend" "dist/$NAME/frontend"
+          cp -r backend/src backend/pyproject.toml backend/uv.lock backend/.python-version backend/README.md "dist/$NAME/backend/"
+          find "dist/$NAME/backend/src" -name __pycache__ -type d -prune -exec rm -rf {} +
+          cp -r frontend/dist "dist/$NAME/frontend/"
+          cp ColabConnect.bat colabconnect.sh README.md LICENSE NOTICE "dist/$NAME/"
+          (cd dist && zip -qr "$NAME.zip" "$NAME")
+          echo "ASSET=dist/$NAME.zip" >> "$GITHUB_ENV"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$ASSET" --title "CyColabConnect $GITHUB_REF_NAME" --generate-notes
