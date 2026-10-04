@@ -1,6 +1,6 @@
 [project]
 name = "colabconnect"
-version = "0.1.0"
+version = "0.2.0"
 description = "Create, configure and run Google Colab notebooks from a local web UI, with a built-in MCP server"
 readme = "README.md"
 license = "GPL-3.0-or-later"
