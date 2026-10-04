@@ -201,7 +201,7 @@ export default function App() {
             {usage.balance.toFixed(1)} UC{usage.rate_per_hour ? ` · ${usage.rate_per_hour.toFixed(2)}/h` : ''}
           </span>
         )}
-        <span className="account">{auth.email ?? (auth.method === 'adc' ? 'gcloud ADC' : 'Compte Google')}</span>
+        <span className="account" title={auth.token_storage ? `Jeton Google : ${auth.token_storage}` : undefined}>{auth.email ?? (auth.method === 'adc' ? 'gcloud ADC' : 'Compte Google')}</span>
         {update?.update_available && (
           <button className="update-badge" onClick={() => setShowSettings(true)} title="Mise à jour disponible">
             <ArrowUpCircle size={14} /> v{update.latest}

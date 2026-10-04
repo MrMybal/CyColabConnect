@@ -80,7 +80,8 @@ export function Login({ status, onDone }: { status: AuthStatus | null; onDone: (
         </details>
 
         <p className="small muted legal">
-          Les identifiants restent sur cette machine (~/.colabconnect). ColabConnect utilise les mêmes API non officielles que google-colab-cli.
+          Votre mot de passe reste chez Google. Le jeton d'accès est chiffré dans le Gestionnaire d'identifiants Windows (ou le
+          trousseau du système) et ne quitte pas cette machine. ColabConnect utilise les mêmes API non officielles que google-colab-cli.
         </p>
       </div>
     </div>

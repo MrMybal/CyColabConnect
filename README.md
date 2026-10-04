@@ -96,7 +96,7 @@ Le script met à jour la version, commit, crée le tag `v0.2.0` et le pousse ; l
 | Variable | Défaut |
 |---|---|
 | `COLABCONNECT_PORT` | `8420` |
-| `COLABCONNECT_HOME` | `~/.colabconnect` (token OAuth, runtimes, notebooks) |
+| `COLABCONNECT_HOME` | `~/.colabconnect` (runtimes, notebooks, réglages ; le jeton Google est dans le Gestionnaire d'identifiants Windows / trousseau système) |
 | `COLABCONNECT_NOTEBOOKS` | `$COLABCONNECT_HOME/notebooks` |
 | `COLABCONNECT_CELL_TIMEOUT` | `3600` secondes |
 | `COLABCONNECT_GITHUB_TOKEN` | token GitHub pour les mises à jour (dépôt privé) |

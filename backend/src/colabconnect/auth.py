@@ -19,10 +19,9 @@ from typing import Any
 
 import google.auth
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 
-from . import config
+from . import config, token_store
 
 logger = logging.getLogger(__name__)
 
@@ -92,19 +91,16 @@ class AuthManager:
             except Exception as e:
                 logger.warning("ADC credentials unavailable: %s", e)
             return
-        if config.TOKEN_PATH.exists():
-            try:
-                self._creds = Credentials.from_authorized_user_file(
-                    str(config.TOKEN_PATH), SCOPES
-                )
-                self._method = "oauth"
-            except Exception as e:
-                logger.warning("Could not load %s: %s", config.TOKEN_PATH, e)
+        client = _load_client_config()
+        creds = token_store.load(client.get("installed") or client.get("web") or {}, SCOPES)
+        if creds is not None:
+            self._creds = creds
+            self._method = "oauth"
 
     def _save(self) -> None:
         config.ensure_dirs()
         if self._method == "oauth" and self._creds is not None:
-            config.TOKEN_PATH.write_text(self._creds.to_json())
+            token_store.save(self._creds)
         _META_PATH.write_text(json.dumps({"method": self._method, "email": self._email}))
 
     # -- public API --------------------------------------------------------
@@ -116,6 +112,7 @@ class AuthManager:
             "email": self._email,
             "login_pending": self._pending_flow is not None,
             "adc_command": ADC_LOGIN_COMMAND,
+            "token_storage": token_store.backend_name() if self._method == "oauth" else None,
         }
 
     def start_login(self) -> str:
@@ -152,7 +149,7 @@ class AuthManager:
         self._method = None
         self._email = None
         self._pending_flow = None
-        config.TOKEN_PATH.unlink(missing_ok=True)
+        token_store.delete()
         _META_PATH.unlink(missing_ok=True)
 
     async def access_token(self) -> str:

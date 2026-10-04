@@ -22,6 +22,33 @@ from pathlib import Path
 _HOME = Path(tempfile.mkdtemp(prefix="colabconnect-test-"))
 os.environ["COLABCONNECT_HOME"] = str(_HOME)
 
+import keyring  # noqa: E402
+from keyring.backend import KeyringBackend  # noqa: E402
+from keyring.errors import PasswordDeleteError  # noqa: E402
+
+
+class MemoryKeyring(KeyringBackend):
+    """In-memory credential store so tests never touch the real OS keyring."""
+
+    priority = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.store: dict[tuple[str, str], str] = {}
+
+    def get_password(self, service, username):
+        return self.store.get((service, username))
+
+    def set_password(self, service, username, password):
+        self.store[(service, username)] = password
+
+    def delete_password(self, service, username):
+        if self.store.pop((service, username), None) is None:
+            raise PasswordDeleteError(username)
+
+
+keyring.set_keyring(MemoryKeyring())
+
 import httpx  # noqa: E402
 import pytest  # noqa: E402
 import uvicorn  # noqa: E402

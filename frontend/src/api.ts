@@ -66,6 +66,7 @@ export type AuthStatus = {
   email: string | null
   login_pending: boolean
   adc_command: string
+  token_storage: string | null
 }
 
 export type AppSettings = { auto_stop_minutes: number; has_github_token: boolean }
