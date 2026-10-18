@@ -1,125 +1,143 @@
 # CyColabConnect
 
-Application locale pour **créer, configurer et exécuter des notebooks sur Google Colab**
-(CPU, GPU T4/L4/G4/A100/H100, TPU v5e/v6e), avec un **serveur MCP intégré** : un agent IA
-(Claude Code, Gemini CLI…) pilote les mêmes notebooks et runtimes, et vous voyez ses actions
-en direct dans l'interface.
+**English** · [Français](README.fr.md)
+
+A local application to **create, configure and run Google Colab notebooks**
+(CPU, T4/L4/G4/A100/H100 GPUs, v5e/v6e TPUs), with a **built-in MCP server**: an AI agent
+(Claude Code, Gemini CLI and others) controls the same notebooks and runtimes while its actions
+appear live in the interface.
 
 ```
-Navigateur ──HTTP/WS──┐
-                      ├── ColabConnect (FastAPI, 127.0.0.1:8420) ──► colab.research.google.com/tun/m  (allocation des VM)
-Agent IA ───MCP /mcp──┘                                         └──► runtime Colab : Jupyter (kernel WS, fichiers)
+Browser ───HTTP/WS──┐
+                    ├── ColabConnect (FastAPI, 127.0.0.1:8420) ──► colab.research.google.com/tun/m  (VM allocation)
+AI agent ──MCP /mcp─┘                                         └──► Colab runtime: Jupyter (kernel WS, files)
 ```
 
-## Démarrage
+<a id="démarrage"></a>
 
-Prérequis : [uv](https://docs.astral.sh/uv/) (et Node.js 20+ seulement pour un clone git :
-les archives de release contiennent l'interface déjà construite).
+## Getting started
 
-Téléchargez l'archive `CyColabConnect-X.Y.Z.zip` de la
-[dernière release](https://github.com/MrMybal/CyColabConnect/releases), décompressez-la, puis :
+Requirement: [uv](https://docs.astral.sh/uv/) (and Node.js 20+ only for a Git clone:
+release archives include the built interface).
+
+Download `CyColabConnect-X.Y.Z.zip` from the
+[latest release](https://github.com/MrMybal/CyColabConnect/releases), extract it, then run:
 
 ```bash
 ColabConnect.bat
 ```
 
-(`./colabconnect.sh` sous Linux/macOS.)
+Use `./colabconnect.sh` on Linux/macOS.
 
-ou manuellement :
+Or start it manually:
 
 ```bash
 cd frontend && npm install && npm run build
 cd ../backend && uv run colabconnect serve
 ```
 
-L'interface s'ouvre sur http://127.0.0.1:8420. Connexion Google : cliquez sur
-« Se connecter avec Google », autorisez, puis collez le code affiché par Google
-(même flux que `google-colab-cli`). Alternative : identifiants `gcloud` (ADC).
+The interface opens at http://127.0.0.1:8420. To sign in to Google, click
+“Sign in with Google”, authorize access, then paste the code displayed by Google
+(the same flow as `google-colab-cli`). Alternatively, use `gcloud` credentials (ADC).
 
-## Fonctionnalités
+<a id="fonctionnalités"></a>
 
-- **Notebooks** `.ipynb` locaux (`~/.colabconnect/notebooks`) : création, import/export,
-  cellules code/markdown, exécution cellule par cellule ou complète, sorties en streaming
-  (texte, images, HTML, tableaux pandas, erreurs).
-- **Configuration par notebook** : accélérateur, High-RAM, paquets pip, variables
-  d'environnement, code de setup — appliqués automatiquement au démarrage du runtime.
-- **Runtimes** : allocation/libération, rattachement d'un runtime existant, interruption,
-  redémarrage du kernel, ressources (RAM/VRAM/disque), solde d'unités de calcul, ouverture
-  du runtime dans l'interface web de Colab.
-- **Fichiers** du runtime : parcourir, envoyer (glisser-déposer), télécharger, supprimer.
-- **Terminal** bash (tmux) du runtime dans l'interface, comme `colab console`.
-- **Arrêt automatique** des runtimes inactifs (défaut 1 h, réglable dans Paramètres) pour
-  économiser les unités de calcul ; un runtime récupéré par Colab est détecté et signalé.
-- **Google Drive** : `drive.mount()` fonctionne ; l'app affiche le lien d'autorisation.
-- **MCP** : 27 outils (notebooks, cellules, exécution, shell, pip, runtimes, fichiers,
-  arrêt auto) + fil d'activité dans l'interface.
+## Features
 
-## Connecter un agent (MCP)
+- **Local `.ipynb` notebooks** (`~/.colabconnect/notebooks`): create, import/export,
+  code/Markdown cells, run individual cells or a full notebook, and stream outputs
+  (text, images, HTML, pandas tables and errors).
+- **Per-notebook configuration**: accelerator, High-RAM, pip packages, environment
+  variables and setup code, applied automatically when the runtime starts.
+- **Runtimes**: allocate/release, attach to an existing runtime, interrupt,
+  restart the kernel, inspect resources (RAM/VRAM/disk), view compute-unit balance,
+  and open the runtime in Colab's Web interface.
+- **Runtime files**: browse, upload through drag and drop, download and delete.
+- **Bash terminal** (tmux) in the interface, like `colab console`.
+- **Automatic shutdown** of idle runtimes (default: 1 hour, configurable in Settings)
+  to save compute units; runtimes reclaimed by Colab are detected and reported.
+- **Google Drive**: `drive.mount()` works; the application displays the authorization link.
+- **MCP**: 27 tools (notebooks, cells, execution, shell, pip, runtimes, files and
+  automatic shutdown), plus an activity feed in the interface.
 
-Claude Code :
+<a id="connecter-un-agent-mcp"></a>
+
+## Connect an agent (MCP)
+
+Claude Code:
 
 ```bash
 claude mcp add --transport http colabconnect http://127.0.0.1:8420/mcp
 ```
 
-Gemini CLI (`settings.json`) : `{"mcpServers": {"colabconnect": {"httpUrl": "http://127.0.0.1:8420/mcp"}}}`
+Gemini CLI (`settings.json`): `{"mcpServers": {"colabconnect": {"httpUrl": "http://127.0.0.1:8420/mcp"}}}`
 
-Clients stdio uniquement (Claude Desktop…) — ColabConnect doit être lancé :
+For stdio-only clients (Claude Desktop and others), ColabConnect must already be running:
 
 ```json
-{"mcpServers": {"colabconnect": {"command": "uv", "args": ["--directory", "<dossier CyColabConnect>/backend", "run", "colabconnect", "mcp-stdio"]}}}
+{"mcpServers": {"colabconnect": {"command": "uv", "args": ["--directory", "<CyColabConnect folder>/backend", "run", "colabconnect", "mcp-stdio"]}}}
 ```
 
-## Mises à jour
+<a id="mises-à-jour"></a>
 
-ColabConnect vérifie les [releases GitHub](https://github.com/MrMybal/CyColabConnect/releases)
-au démarrage puis toutes les 6 h ; un badge apparaît dans la barre du haut quand une version
-est disponible. **Paramètres → Mises à jour → Installer et redémarrer** télécharge l'archive,
-vérifie son SHA-256, remplace `backend/src` et `frontend/dist`, puis le lanceur redémarre l'app.
-Vos données (`~/.colabconnect` : compte, notebooks, réglages) ne sont pas touchées.
+## Updates
 
-- Tant que le dépôt est privé, renseignez un token GitHub *fine-grained* en lecture seule
-  (Contents : Read) dans Paramètres, ou la variable `COLABCONNECT_GITHUB_TOKEN`.
-- Depuis un clone git, l'app signale la nouvelle version mais n'écrase rien : `git pull`.
+ColabConnect checks [GitHub releases](https://github.com/MrMybal/CyColabConnect/releases)
+at startup and every 6 hours. A badge appears in the top bar when an update is available.
+**Settings → Updates → Install and restart** downloads the archive, verifies its SHA-256,
+replaces `backend/src` and `frontend/dist`, then the launcher restarts the application.
+Your data (`~/.colabconnect`: account, notebooks and settings) is preserved.
 
-### Publier une version
+- For a private repository, provide a read-only, fine-grained GitHub token
+  (Contents: Read) in Settings or through `COLABCONNECT_GITHUB_TOKEN`.
+- From a Git clone, the application reports new versions but does not overwrite files: use `git pull`.
+
+<a id="publier-une-version"></a>
+
+### Publish a version
 
 ```powershell
 .\scripts\release.ps1 0.2.0
 ```
 
-Le script met à jour la version, commit, crée le tag `v0.2.0` et le pousse ; la GitHub Action
-`Release` lance les tests, construit l'interface et publie l'archive.
+The script updates the version, commits, creates the `v0.2.0` tag and pushes it.
+The `Release` GitHub Action runs tests, builds the interface and publishes the archive.
 
 ## Configuration
 
-| Variable | Défaut |
+| Variable | Default |
 |---|---|
 | `COLABCONNECT_PORT` | `8420` |
-| `COLABCONNECT_HOME` | `~/.colabconnect` (runtimes, notebooks, réglages ; le jeton Google est dans le Gestionnaire d'identifiants Windows / trousseau système) |
+| `COLABCONNECT_HOME` | `~/.colabconnect` (runtimes, notebooks and settings; the Google token is stored in Windows Credential Manager / the system keychain) |
 | `COLABCONNECT_NOTEBOOKS` | `$COLABCONNECT_HOME/notebooks` |
-| `COLABCONNECT_CELL_TIMEOUT` | `3600` secondes |
-| `COLABCONNECT_GITHUB_TOKEN` | token GitHub pour les mises à jour (dépôt privé) |
+| `COLABCONNECT_CELL_TIMEOUT` | `3600` seconds |
+| `COLABCONNECT_GITHUB_TOKEN` | GitHub token for updates from a private repository |
 | `COLABCONNECT_UPDATE_REPO` | `MrMybal/CyColabConnect` |
 
-## Développement
+<a id="développement"></a>
+
+## Development
 
 ```bash
-cd backend && uv run pytest          # tests de bout en bout (faux Colab + vrai Jupyter local)
-cd frontend && npm run dev           # UI sur :5173, proxy vers :8420
+cd backend && uv run pytest          # end-to-end tests (fake Colab + real local Jupyter)
+cd frontend && npm run dev           # UI on :5173, proxy to :8420
 ```
 
-## Limites
+<a id="limites"></a>
 
-- Les endpoints `/tun/m/*` sont ceux de l'interface web de Colab (non officiels, rétro-ingéniés
-  par `google-colab-cli`) : ils peuvent changer. L'API officielle `colaboratory.googleapis.com`
-  est en bêta sur liste blanche.
-- Le serveur n'écoute que sur `127.0.0.1` et refuse les requêtes d'autres origines : il peut
-  exécuter du code sur Colab avec vos identifiants Google.
-- Les GPU consomment des unités de calcul : pensez à libérer les runtimes.
+## Limitations
 
-## Licence
+- The `/tun/m/*` endpoints belong to Colab's Web interface (unofficial, reverse-engineered
+  by `google-colab-cli`) and may change. The official `colaboratory.googleapis.com`
+  API is in an allowlisted beta.
+- The server listens only on `127.0.0.1` and rejects requests from other origins:
+  it can execute code on Colab using your Google credentials.
+- GPUs consume compute units: remember to release runtimes.
 
-[GPL-3.0-or-later](LICENSE). Une partie du client Colab est adaptée de
-[google-colab-cli](https://github.com/googlecolab/google-colab-cli) (Apache-2.0, © Google LLC) :
-voir [NOTICE](NOTICE). Projet non affilié à Google.
+<a id="licence"></a>
+
+## License
+
+[GPL-3.0-or-later](LICENSE). Part of the Colab client is adapted from
+[google-colab-cli](https://github.com/googlecolab/google-colab-cli) (Apache-2.0, © Google LLC):
+see [NOTICE](NOTICE). This project is not affiliated with Google.
